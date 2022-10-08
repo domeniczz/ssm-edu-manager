@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.promotion.PromotionSpaceMapper">
+
+    <!--
+        添加广告位
+        is_del 前端不传值，直接设置为 0
+    -->
+    <insert id="savePromotionSpace" parameterType="promotionSpace">
+        INSERT INTO promotion_space
+            (id, name, space_key, create_time, update_time, is_del)
+        VALUES (
+            NULL,
+            #{name},
+            #{spaceKey},
+            #{createTime},
+            #{updateTime},
+            0
+        )
+    </insert>
+
+    <!-- 修改广告位信息 -->
+    <update id="updatePromotionSpace" parameterType="promotionSpace">
+        UPDATE promotion_space
+        SET name = #{name},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 查询所有广告位 -->
+    <select id="findAllPromotionSpace" resultType="promotionSpace">
+        SELECT id, name, space_key, create_time, update_time, is_del
+        FROM promotion_space
+    </select>
+
+    <!--
+        根据广告位 id 查询广告位名称
+        用于广告位名称回显
+    -->
+    <select id="findPromotionSpaceNameById" parameterType="integer" resultType="string">
+        SELECT name FROM promotion_space WHERE id = #{id};
+    </select>
+
+    <!-- 根据广告位 id 查询广告位信息 -->
+    <select id="findPromotionSpaceById" parameterType="integer" resultType="promotionSpace">
+        SELECT id, name, space_key, create_time, update_time, is_del
+        FROM promotion_space
+        WHERE id = #{id}
+    </select>
+
+</mapper>

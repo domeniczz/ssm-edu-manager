@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.permission.ResourceCategoryMapper">
+
+    <resultMap id="resourceCategory" type="resourceCategory">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 添加资源分类 -->
+    <insert id="saveResourceCategory" parameterType="resourceCategory">
+        INSERT INTO resource_category (
+            id,
+            name,
+            sort,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        ) VALUES (
+            NULL,
+            #{name},
+            #{sort},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- 删除资源分类 -->
+    <delete id="deleteResourceCategory">
+        DELETE FROM resource_category WHERE id = #{id}
+    </delete>
+
+    <!-- 修改资源分类 -->
+    <update id="updateResourceCategory" parameterType="resourceCategory">
+        UPDATE resource_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="sort != null and sort != ''">
+                sort = #{sort},
+            </if>
+            <if test="createTime != null">
+                created_time = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                updated_time = #{updateTime},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+        </trim>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <!-- 查询资源分类信息列表 -->
+    <select id="findAllResourceCategory" resultMap="resourceCategory">
+        SELECT
+            id,
+            name,
+            sort,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM resource_category
+    </select>
+
+</mapper>

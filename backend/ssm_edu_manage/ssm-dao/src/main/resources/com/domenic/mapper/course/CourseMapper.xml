@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名）-->
+<mapper namespace="com.domenic.mapper.course.CourseMapper">
+
+    <!-- 新增课程信息 -->
+    <insert id="saveCourse" parameterType="course">
+        INSERT INTO course (
+            course_name,
+            brief,
+            preview_first_field,
+            preview_second_field,
+            course_img_url,
+            course_list_img,
+            sort_num,
+            price,
+            discounts,
+            sales,
+            discounts_tag,
+            course_description_mark_down,
+            create_time,
+            update_time
+        ) VALUES (
+            #{courseName},#{brief},#{previewFirstField},
+            #{previewSecondField},#{courseImgUrl},
+            #{courseListImg},#{sortNum},#{price},#{discounts},
+            #{sales},#{discountsTag},#{courseDescriptionMarkDown},
+            #{createTime},#{updateTime}
+        );
+
+        <!-- 返回主键，只适用于单条记录插入 -->
+        <selectKey keyProperty="id" keyColumn="id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <!-- 新增讲师信息 -->
+    <insert id="saveTeacher" parameterType="teacher">
+        INSERT INTO teacher (
+            course_id,
+            teacher_name,
+            POSITION,
+            description,
+            create_time,
+            update_time
+        )
+        VALUES (
+            #{courseId}, #{teacherName}, #{position},
+            #{description}, #{createTime}, #{updateTime}
+        );
+    </insert>
+
+    <!-- 更新课程信息 -->
+    <update id="updateCourse" parameterType="course">
+        UPDATE course
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="courseName != null and courseName != ''">
+                course_name = #{courseName},
+            </if>
+            <if test="brief != null and brief != ''">
+                brief = #{brief},
+            </if>
+            <if test="previewFirstField != null and previewFirstField != ''">
+                preview_first_field = #{previewFirstField},
+            </if>
+            <if test="previewSecondField != null and previewSecondField != ''">
+                preview_second_field = #{previewSecondField},
+            </if>
+            <if test="courseImgUrl != null and courseImgUrl != ''">
+                course_img_url = #{courseImgUrl},
+            </if>
+            <if test="courseListImg != null and courseListImg != ''">
+                course_list_img = #{courseListImg},
+            </if>
+            <if test="sortNum != null and sortNum != ''">
+                sort_num = #{sortNum},
+            </if>
+            <if test="price != null and price != ''">
+                price = #{price},
+            </if>
+            <if test="discounts != null and discounts != ''">
+                discounts = #{discounts},
+            </if>
+            <if test="sales != null and sales != '' or sales == 0">
+                sales = #{sales},
+            </if>
+            <if test="discountsTag != null and discountsTag != ''">
+                discounts_tag = #{discountsTag},
+            </if>
+            <if test="courseDescriptionMarkDown != null and courseDescriptionMarkDown != ''">
+                course_description_mark_down = #{courseDescriptionMarkDown},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </trim>
+        <where>
+            <if test="id!=null and id != '' ">id = #{id}</if>
+        </where>
+    </update>
+
+    <!-- 更新讲师信息 -->
+    <update id="updateTeacher">
+        UPDATE teacher
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="teacherName != null and teacherName != ''">
+                teacher_name = #{teacherName},
+            </if>
+            <if test="position != null and position != ''">
+                position = #{position},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime}
+            </if>
+        </trim>
+        <where>
+            <if test="courseId != null and courseId != '' ">course_id = #{courseId}</if>
+        </where>
+    </update>
+
+    <!-- 更新课程状态 -->
+    <update id="updateCourseStatus">
+        UPDATE course SET status = #{status}, update_time = #{updateTime} WHERE id = ${id}
+    </update>
+
+    <!-- 多条件课程列表查询 -->
+    <select id="findCourseByConditions" parameterType="courseVo" resultType="course">
+        SELECT
+            id,
+            course_name,
+            price,
+            sort_num,
+            STATUS
+        FROM
+            course
+        <where>
+            <if test="true">
+                is_del != 1
+            </if>
+            <if test="courseName != null and courseName != ''">
+                AND course_name LIKE concat('%',#{courseName},'%')
+            </if>
+            <if test="status != null and status !=''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据课程 id 查询课程及对应讲师的信息 -->
+    <select id="findCourseById" parameterType="integer" resultType="courseVo">
+        SELECT
+            c.id, c.course_name, c.brief, c.price, c.price_tag,
+            c.discounts, c.discounts_tag, c.course_description_mark_down,
+            c.course_description, c.course_img_url, c.is_new, c.is_new_des,
+            c.last_operator_id, c.auto_online_time, c.create_time, c.update_time,
+            c.is_del, c.total_duration, c.course_list_img, c.status,
+            c.sort_num, c.preview_first_field, c.preview_second_field, c.sales,
+            t.teacher_name, t.position, t.description
+        FROM course c
+        LEFT JOIN teacher t ON c.id = t.course_id
+        WHERE c.id = #{id}
+    </select>
+
+</mapper>

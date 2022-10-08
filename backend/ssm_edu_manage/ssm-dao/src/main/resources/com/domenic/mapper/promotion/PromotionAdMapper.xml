@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.promotion.PromotionAdMapper">
+
+    <resultMap id="promotionAd" type="promotionAd">
+        <id property="id" column="id"/>
+        <!-- 一对一关联，通过调用 PromotionSpaceMapper 中的 findPromotionSpaceById 获取对象 -->
+        <association property="promotionSpace" column="space_id" javaType="promotionSpace"
+                     select="com.domenic.mapper.promotion.PromotionSpaceMapper.findPromotionSpaceById"/>
+    </resultMap>
+
+    <!-- 新建广告信息 -->
+    <insert id="savePromotionAd" parameterType="promotionAd">
+        INSERT INTO promotion_ad (
+            name,
+            space_id,
+            keyword,
+            html_content,
+            text,
+            link,
+            start_time,
+            end_time,
+            create_time,
+            update_time,
+            status,
+            priority,
+            img
+        ) VALUES (
+            #{name},
+            #{spaceId},
+            #{keyword},
+            #{htmlContent},
+            #{text},
+            #{link},
+            #{startTime},
+            #{endTime},
+            #{createTime},
+            #{updateTime},
+            #{status},
+            #{priority},
+            #{img}
+        )
+    </insert>
+
+    <!-- 修改广告信息 -->
+    <update id="updatePromotionAd" parameterType="promotionAd">
+        UPDATE promotion_ad
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="spaceId != null and spaceId != ''">
+                space_id = #{spaceId},
+            </if>
+            <if test="link != null">
+                link = #{link},
+            </if>
+            <if test="status != null and status != '' or status == 0">
+                status = #{status},
+            </if>
+            <if test="img != null">
+                img = #{img},
+            </if>
+            <if test="text != null">
+                text = #{text},
+            </if>
+            <if test="startTime != null">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null">
+                end_time = #{endTime},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != '' ">id = #{id}</if>
+        </where>
+    </update>
+
+    <!-- 更新广告的上下线状态 -->
+    <update id="updatePromotionAdStatus">
+        UPDATE promotion_ad
+        SET status = #{status}, update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 分页获取所有广告列表数据 -->
+    <select id="findAllPromotionAd" resultMap="promotionAd">
+        SELECT
+            id,
+            name,
+            space_id,
+            keyword,
+            html_content,
+            text,
+            link,
+            start_time,
+            end_time,
+            create_time,
+            update_time,
+            status,
+            priority,
+            img
+        FROM promotion_ad
+    </select>
+
+    <!-- 通过 id 查询广告信息 -->
+    <select id="findPromotionAdById" parameterType="integer" resultType="promotionAd">
+        SELECT
+            id,
+            name,
+            space_id,
+            keyword,
+            html_content,
+            text,
+            link,
+            start_time,
+            end_time,
+            create_time,
+            update_time,
+            status,
+            priority,
+            img
+        FROM promotion_ad
+        WHERE id = #{id}
+    </select>
+
+</mapper>

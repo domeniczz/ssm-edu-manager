@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 定义日志文件的存储地址 -->
+    <property name="LOG_HOME" value="D:/Desktop"/>
+
+    <!-- 控制台 appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+
+    <!-- 文件 appender -->
+    <!--<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+    <!--    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">-->
+    <!--        <fileNamePattern>${LOG_HOME}/app.%d{yyyy-MM-dd}.%i.log</fileNamePattern>-->
+    <!--        &lt;!&ndash; max size of each archived file &ndash;&gt;-->
+    <!--        <maxFileSize>10MB</maxFileSize>-->
+    <!--        &lt;!&ndash;-->
+    <!--            total size of all archive files,-->
+    <!--            if exceed the total size, then delete old archived file-->
+    <!--        &ndash;&gt;-->
+    <!--        <totalSizeCap>100MB</totalSizeCap>-->
+    <!--        &lt;!&ndash; max days to keep &ndash;&gt;-->
+    <!--        <maxHistory>30</maxHistory>-->
+    <!--    </rollingPolicy>-->
+
+    <!--    <encoder>-->
+    <!--        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+    <!--    </encoder>-->
+    <!--</appender>-->
+
+    <logger name="com.domenic" level="debug" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <!--<appender-ref ref="FILE"/>-->
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+        <!--<appender-ref ref="FILE"/>-->
+    </root>
+
+</configuration>

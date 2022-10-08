@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.user.UserMapper">
+
+    <resultMap id="role" type="role">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <resultMap id="resource" type="resource">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <resultMap id="menu" type="menu">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <!--
+        给用户分配角色
+        逐个角色地分配，由 service 层循环调用
+    -->
+    <insert id="userAssignRole" parameterType="user_Role_Relation">
+        INSERT INTO user_role_relation (
+            id,
+            user_id,
+            role_id,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        )
+        VALUES (
+            NULL,
+            #{userId},
+            #{roleId},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!--
+        删除 用户 - 角色 中间表中所有该用户已被分配的角色
+        也就是解除该用户和角色的关联
+    -->
+    <delete id="deleteUserAssignedRole" parameterType="integer">
+        DELETE FROM user_role_relation WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 更新用户状态：ENABLE 能登录，DISABLE 不能登录 -->
+    <update id="updateUserStatus" parameterType="user">
+        UPDATE user SET status = #{status} WHERE id = #{id};
+    </update>
+
+    <!--
+        查找所有用户信息
+        可选条件查询：用户名；手机号；注册的起始、结束时间
+    -->
+    <select id="findAllUser" parameterType="userVo" resultType="user">
+        SELECT
+            id,
+            name,
+            portrait,
+            phone,
+            password,
+            reg_ip,
+            account_non_expired,
+            credentials_non_expired,
+            account_non_locked,
+            status,
+            is_del,
+            create_time,
+            update_time
+        FROM user
+        <where>
+            is_del != 1
+            <if test="phone != null and phone !=''">
+                and phone = #{phone}
+            </if>
+            <if test="username != null and username !=''">
+                and name = #{username}
+            </if>
+            <if test="startCreateTime != null and endCreateTime != null">
+                and create_time BETWEEN #{startCreateTime} AND #{endCreateTime}
+            </if>
+        </where>
+    </select>
+
+    <!-- 查找指定用户的信息 -->
+    <select id="findSpecificUser" parameterType="user" resultType="user">
+        SELECT
+            id,
+            name,
+            portrait,
+            phone,
+            password,
+            reg_ip,
+            account_non_expired,
+            credentials_non_expired,
+            account_non_locked,
+            status,
+            is_del,
+            create_time,
+            update_time
+        FROM user
+        <where>
+            <if test="id != null and id != ''">
+                id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone = #{phone}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据用户 id 查询用户当前具有的角色 -->
+    <select id="findUserRelatedRoleById" parameterType="integer" resultMap="role">
+        SELECT r.id,
+               code,
+               name,
+               description,
+               created_time,
+               updated_time,
+               created_by,
+               updated_by
+        FROM roles r
+        WHERE id IN (SELECT ur.role_id FROM user_role_relation ur WHERE ur.user_id = #{id})
+    </select>
+
+    <!--
+        获取用户权限显示，步骤一
+        根据用户 id 查询对应的角色信息
+    -->
+    <select id="findUserRelatedRolesById" parameterType="integer" resultMap="role">
+        SELECT
+            r.id,
+            r.code,
+            r.name,
+            r.description,
+            r.created_time,
+            r.updated_time,
+            r.created_by,
+            r.updated_by
+        FROM roles r INNER JOIN user_role_relation ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userid}
+    </select>
+
+    <!--
+        获取用户权限显示，步骤二
+        通过角色 id 查询被授权的顶级目录
+    -->
+    <select id="findRootMenuByRoleId" parameterType="java.util.List" resultMap="menu">
+        SELECT DISTINCT
+            id,
+            parent_id,
+            href,
+            icon,
+            name,
+            description,
+            order_num,
+            shown,
+            level,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM menu
+        WHERE parent_id = -1
+          AND id IN (
+            SELECT menu_id FROM role_menu_relation WHERE role_id IN
+            <foreach collection="list" item="parentId" open="(" close=")" separator=",">
+                #{parentId}
+            </foreach>
+        )
+    </select>
+
+    <!--
+        获取用户权限显示，步骤三
+        根据顶级菜单的 id，查询子菜单
+        参数 pid 就是顶级菜单的 id 值
+    -->
+    <select id="findSubMenuByPid" parameterType="integer" resultMap="menu">
+        SELECT
+            id,
+            parent_id,
+            href,
+            icon,
+            name,
+            description,
+            order_num,
+            shown,
+            level,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM menu WHERE parent_id = #{pid}
+    </select>
+
+    <!--
+        获取用户权限显示，步骤四
+        获取用户拥有的资源权限信息
+    -->
+    <select id="findResourceByRoleId" parameterType="java.util.List" resultMap="resource">
+        SELECT DISTINCT
+            id,
+            name,
+            url,
+            category_id,
+            description,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM resource
+        WHERE id IN (
+            SELECT DISTINCT resource_id FROM role_resource_relation WHERE role_id IN
+            <foreach collection="list" item="roleId" open="(" close=")" separator=",">
+                #{roleId}
+            </foreach>
+        )
+    </select>
+
+</mapper>

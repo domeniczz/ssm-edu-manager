@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.permission.ResourceMapper">
+
+    <resultMap id="resource" type="resource">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 新增资源 -->
+    <insert id="saveResource" parameterType="resource">
+        INSERT INTO resource (
+            id,
+            name,
+            url,
+            category_id,
+            description,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        ) VALUES (
+            NULL,
+            #{name},
+            #{url},
+            #{categoryId},
+            #{description},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- 删除资源 -->
+    <delete id="deleteResource" parameterType="integer">
+        DELETE FROM resource WHERE id = #{id}
+    </delete>
+
+    <!-- 修改资源 -->
+    <update id="updateResource" parameterType="resource">
+        UPDATE resource
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="url != null and url != ''">
+                url = #{url},
+            </if>
+            <if test="categoryId != null and categoryId != ''">
+                category_id = #{categoryId},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="createTime != null">
+                created_time = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                updated_time = #{updateTime},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+        </trim>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <!-- 查找所有资源和条件查询 -->
+    <select id="findAllResource" parameterType="resourceVo" resultMap="resource">
+        SELECT
+            id,
+            name,
+            url,
+            category_id,
+            description,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM resource
+        <where>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="url != null and url != ''">
+                and url = #{url}
+            </if>
+            <if test="categoryId != null and categoryId != ''">
+                and category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+
+</mapper>

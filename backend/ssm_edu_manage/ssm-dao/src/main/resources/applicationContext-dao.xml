@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- Spring 整合 Mybatis 的操作 -->
+    <!-- 引入指定配置文件 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <!-- 创建数据源对象 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--
+        SqlSessionFactoryBean 为 mybatis-spring 依赖提供的
+        将 SqlSessionFactory 的创建交给 Spring 的 IOC 容器
+    -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 引入 Mybatis 的核心配置文件（若需要）-->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 给封装类取别名，代替 <typeAliases>；alias 在使用时，不区分大小写 -->
+        <property name="typeAliasesPackage" value="com.domenic.domain"/>
+    </bean>
+
+    <!-- Mapper 映射扫描。对接口进行扫描，生成接口的代理对象并存入 IOC 容器中 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 扫描该包下的所有接口 -->
+        <property name="basePackage" value="com.domenic.mapper"/>
+    </bean>
+
+</beans>

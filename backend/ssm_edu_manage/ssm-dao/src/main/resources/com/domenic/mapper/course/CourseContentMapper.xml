@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.course.CourseContentMapper">
+
+    <resultMap id="SectionLessonMap" type="courseSection">
+        <!--
+            注意：若查询结果中有多个 id 字段，这里取从左至右第一个 id 字段
+            其实最好的办法是给重复的字段起别名
+        -->
+        <id property="id" column="id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="sectionName" column="section_name"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="isDe" column="is_de"/>
+        <result property="status" column="status"/>
+        <result property="orderNum" column="order_num"/>
+
+        <collection property="lessonList" ofType="courseLesson">
+            <!-- lesson_id 是 SQL 语句中起的别名 -->
+            <id property="id" column="lesson_id"/>
+            <result property="courseId" column="lesson_course_id"/>
+            <result property="sectionId" column="lesson_section_id"/>
+            <result property="theme" column="lesson_theme"/>
+            <result property="duration" column="lesson_duration"/>
+            <result property="isFree" column="lesson_is_free"/>
+            <result property="isDel" column="lesson_is_del"/>
+            <result property="orderNum" column="lesson_order_num"/>
+            <result property="status" column="lesson_status"/>
+            <result property="createTime" column="lesson_create_time"/>
+            <result property="updateTime" column="lesson_update_time"/>
+        </collection>
+    </resultMap>
+
+    <!--
+        新建章节信息
+        前端不传 status 值，因此默认设置为 0
+    -->
+    <insert id="saveCourseSection" parameterType="courseSection">
+        INSERT INTO course_section (
+            course_id,
+            section_name,
+            description,
+            order_num,
+            status,
+            create_time,
+            update_time
+        ) VALUES (
+            #{courseId},
+            #{sectionName},
+            #{description},
+            #{orderNum},
+            0,
+            #{createTime},
+            #{updateTime}
+        );
+    </insert>
+
+    <!--
+        新建课时信息
+        前端不传 status 值，因此默认设置为 0
+    -->
+    <insert id="saveCourseLesson" parameterType="courseLesson">
+        INSERT INTO course_lesson (
+            course_id,
+            section_id,
+            theme,
+            duration,
+            order_num,
+            status,
+            create_time,
+            update_time
+        ) VALUES (
+            #{courseId},
+            #{sectionId},
+            #{theme},
+            #{duration},
+            #{orderNum},
+            0,
+            #{createTime},
+            #{updateTime}
+        );
+    </insert>
+
+    <!-- 修改章节信息 -->
+    <update id="updateCourseSection" parameterType="courseSection">
+        UPDATE course_section
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sectionName != null and sectionName != ''">
+                section_name = #{sectionName},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="orderNum != null and orderNum != '' or orderNum == 0">
+                order_num = #{orderNum},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != '' ">id = #{id}</if>
+        </where>
+    </update>
+
+    <!-- 修改章节 status -->
+    <update id="updateSectionStatus" parameterType="courseSection">
+        UPDATE course_section SET status = #{status}, update_time = #{updateTime} WHERE id = #{id}
+    </update>
+
+    <!-- 修改课时信息 -->
+    <update id="updateCourseLesson" parameterType="courseLesson">
+        UPDATE course_lesson
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="theme != null and theme != ''">
+                theme = #{theme},
+            </if>
+            <if test="duration != null and duration != ''">
+                duration = #{duration},
+            </if>
+            <if test="orderNum != null and orderNum != '' or orderNum == 0">
+                order_num = #{orderNum},
+            </if>
+            <if test="updateTime != null">
+                is_free = #{isFree},
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != '' ">id = #{id}</if>
+        </where>
+    </update>
+
+    <!-- 根据课程 id 查询 章节 + 课时 信息 -->
+    <select id="findSectionAndLessonByCourseId" parameterType="integer" resultMap="SectionLessonMap">
+        SELECT
+            -- section 的查询
+            cs.id,
+            cs.course_id,
+            cs.section_name,
+            cs.description,
+            cs.create_time,
+            cs.update_time,
+            cs.is_de,
+            cs.order_num,
+            cs.status,
+            -- lesson 的查询
+            cl.id lesson_id, -- 给 lesson 的主键 id 起个别名，防止和 section 的主键 id 冲突
+            cl.course_id lesson_course_id,
+            cl.section_id lesson_section_id,
+            cl.theme lesson_theme,
+            cl.duration lesson_duration,
+            cl.is_free lesson_is_free,
+            cl.create_time lesson_create_time,
+            cl.update_time lesson_update_time,
+            cl.is_del lesson_is_del,
+            cl.order_num lesson_order_num,
+            cl.status lesson_status
+        FROM
+            course_section cs
+            LEFT JOIN course_lesson cl
+            ON cs.id = cl.section_id
+        WHERE
+            cs.course_id = 7
+        ORDER BY
+            cs.order_num;
+    </select>
+
+    <!-- 根据课程 id 查课程名称，用于回显章节对应的课程名称 -->
+    <select id="findCourseByCourseId" parameterType="integer" resultType="string">
+        SELECT course_name FROM course WHERE id = #{courseId}
+    </select>
+
+</mapper>

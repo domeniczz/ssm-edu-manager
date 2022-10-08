@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.permission.RoleMapper">
+
+    <resultMap id="role" type="role">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <resultMap id="resource" type="resource">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 新建广告信息 -->
+    <insert id="saveRole" parameterType="role">
+        INSERT INTO roles (
+            id,
+            code,
+            name,
+            description,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        )
+        VALUES (
+            #{id},
+            #{code},
+            #{name},
+            #{description},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!--
+        给角色分配授权的菜单
+        逐个菜单地分配，由 service 层循环调用
+    -->
+    <insert id="RoleAssignMenu" parameterType="role_Menu_Relation">
+        INSERT INTO role_menu_relation (
+            id,
+            menu_id,
+            role_id,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        ) VALUES (
+            NULL,
+            #{menuId},
+            #{roleId},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!--
+        给角色分配授权的资源
+        逐个资源地分配，由 service 层循环调用
+    -->
+    <insert id="RoleAssignResource" parameterType="role_Resource_Relation">
+        INSERT INTO role_resource_relation (
+            id,
+            resource_id,
+            role_id,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        ) VALUES (
+            NULL,
+            #{resourceId},
+            #{roleId},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!--
+        删除 角色 - 菜单 中间表中所有该角色已被分配的菜单
+        也就是解除该角色和菜单的关联
+    -->
+    <delete id="deleteRoleAssignedMenu" parameterType="integer">
+        DELETE FROM role_menu_relation WHERE role_id = #{roleId}
+    </delete>
+
+    <!--
+        删除 角色 - 资源 中间表中所有该角色已被分配的资源
+        也就是解除该角色和资源的关联
+    -->
+    <delete id="deleteRoleAssignedResource" parameterType="integer">
+        DELETE FROM role_resource_relation WHERE role_id = #{roleId}
+    </delete>
+
+    <!-- 删除角色（从 角色表 和 角色-菜单中间表 中删除） -->
+    <delete id="deleteRole" parameterType="integer">
+        DELETE r.*, rm.* FROM roles r, role_menu_relation rm WHERE r.id = #{roleId} AND r.id = rm.role_id
+    </delete>
+
+    <!-- 修改广告信息 -->
+    <update id="updateRole" parameterType="role">
+        UPDATE roles
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="code != null and code != ''">
+                code = #{code},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="createTime != null">
+                created_time = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                updated_time = #{updateTime},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+        </trim>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <!-- 查询所有角色；根据条件进行查询，如：角色名称 -->
+    <select id="findAllRole" parameterType="role" resultMap="role">
+        SELECT
+            id,
+            code,
+            name,
+            description,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM roles
+        <where>
+            <if test="id != null and id != ''">
+                id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="code != null and code != ''">
+                and code = #{code}
+            </if>
+        </where>
+    </select>
+
+    <!--
+        根据 角色 id 查询所有对应的 菜单 id
+        可用于回显角色对应授权的菜单
+    -->
+    <select id="findMenuByRoleId" parameterType="integer" resultType="string">
+        SELECT
+            m.id
+        FROM
+            roles r
+            INNER JOIN role_menu_relation rm ON r.id = rm.role_id
+            INNER JOIN menu m ON m.id = rm.menu_id
+        WHERE
+            r.id = 2
+    </select>
+
+    <!-- 获取当前角色拥有的资源 -->
+    <select id="findResourceListByRoleId" resultMap="resource">
+        SELECT
+            id,
+            name,
+            url,
+            category_id,
+            description,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM resource WHERE id IN (SELECT resource_id FROM role_resource_relation WHERE role_id = #{roleId})
+    </select>
+
+</mapper>

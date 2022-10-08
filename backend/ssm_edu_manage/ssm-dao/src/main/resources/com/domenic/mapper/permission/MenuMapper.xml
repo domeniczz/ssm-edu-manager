@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace: 名称空间
+    可以通过名称空间，进行 id 的区分（像 Java 的包一样）
+-->
+<!-- 名称空间值为：Mapper 接口的类名全称（全限定名） -->
+<mapper namespace="com.domenic.mapper.permission.MenuMapper">
+
+    <resultMap id="menuMap" type="menu">
+        <id column="id" property="id"/>
+        <result column="href" property="href"/>
+        <result column="icon" property="icon"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="description" property="description"/>
+        <result column="shown" property="shown"/>
+        <result column="order_num" property="orderNum"/>
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_by" property="updatedBy"/>
+
+        <collection column="id" property="subMenuList" ofType="menu" javaType="ArrayList" select="findAllMenuByPid"/>
+    </resultMap>
+
+    <resultMap id="menu" type="menu">
+        <result column="created_time" property="createTime"/>
+        <result column="updated_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 新增菜单 -->
+    <insert id="saveMenu" parameterType="menu">
+        INSERT INTO menu (
+            parent_id,
+            href,
+            icon,
+            name,
+            description,
+            order_num,
+            shown,
+            level,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        ) VALUES (
+            #{parentId},
+            #{href},
+            #{icon},
+            #{name},
+            #{description},
+            #{orderNum},
+            #{shown},
+            #{level},
+            #{createTime},
+            #{updateTime},
+            #{createdBy},
+            #{updatedBy}
+        )
+    </insert>
+
+    <!-- 更新菜单 -->
+    <update id="updateMenu" parameterType="menu">
+        UPDATE menu
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="parentId != null and parentId != ''">
+                parent_id = #{parentId},
+            </if>
+            <if test="href != null and href != ''">
+                href = #{href},
+            </if>
+            <if test="icon != null and icon != ''">
+                icon = #{icon},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="orderNum != null and orderNum != ''">
+                order_num = #{orderNum},
+            </if>
+            <if test="shown != null and shown != ''">
+                shown = #{shown},
+            </if>
+            <if test="level != null and level != ''">
+                level = #{level},
+            </if>
+            <if test="createTime != null">
+                created_time = #{createTime},
+            </if>
+            <if test="updateTime != null">
+                updated_time = #{updateTime},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+        </trim>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <!-- 查询菜单列表 -->
+    <select id="findAllMenuByPid" parameterType="integer" resultMap="menuMap">
+        SELECT
+            id,
+            parent_id,
+            href,
+            icon,
+            name,
+            description,
+            order_num,
+            shown,
+            level,
+            order_num,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM menu
+        WHERE parent_id = #{pid}
+    </select>
+
+    <!--根据菜单 id 查询对应菜单 findMenuById-->
+    <select id="findMenuById" parameterType="int" resultMap="menu">
+        SELECT
+            id,
+            parent_id,
+            href,
+            icon,
+            name,
+            description,
+            order_num,
+            shown,
+            level,
+            created_time,
+            updated_time,
+            created_by,
+            updated_by
+        FROM menu
+        WHERE id = #{menuId}
+    </select>
+
+</mapper>
