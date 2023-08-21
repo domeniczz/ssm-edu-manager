@@ -2,13 +2,13 @@
 
 ## :triangular_ruler: Backend
 
-This is a Education Manager system for online education platform
+This is an Course Management system for online education platforms
 
 Implemented with SSM (Spring + SpringMVC + MyBatis)
 
 **Project Structure：**
 
-Modules extend their parent project, and modules dependent hierarchically
+Seperate Modules extend their parent project, and modules dependent hierarchically
 
 **modeules extendency：**
 
